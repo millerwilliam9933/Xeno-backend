@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Xeno IDE</title>
+
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: white;
+    }
+
+    #sidebar {
+      width: 220px;
+      background: #1a1a1a;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #editor {
+      flex: 1;
+    }
+
+    #output {
+      height: 160px;
+      background: black;
+      padding: 10px;
+      overflow: auto;
+      border-top: 1px solid #333;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    button {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+
+  <!-- Monaco Editor -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+</head>
+
+<body>
+
+<div id="sidebar">
+  <h3>Examples</h3>
+  <pre>
+local x = 5
+
+if x == 5 then
+  print(x)
+end
+  </pre>
+</div>
+
+<div id="main">
+  <button onclick="runCode()">Run (Ctrl + Enter)</button>
+  <div id="editor"></div>
+  <div id="output"></div>
+</div>
+
+<script>
+let editor;
+
+// Load Monaco
+require.config({
+  paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs" }
+});
+
+require(["vs/editor/editor.main"], function () {
+
+  editor = monaco.editor.create(document.getElementById("editor"), {
+    value:
+`local x = 5
+
+if x == 5 then
+  print(x)
+end`,
+    language: "javascript",
+    theme: "vs-dark",
+    automaticLayout: true
+  });
+
+  // Ctrl + Enter
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCode);
+});
+
+// Run code
+async function runCode() {
+  const code = editor.getValue();
+
+  const res = await fetch("https://YOUR-RENDER-URL.onrender.com/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("output").innerText =
+    data.output || data.error || "No output";
+}
+</script>
+
+</body>
+</html>
